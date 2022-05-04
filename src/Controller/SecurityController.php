@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
+use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -12,7 +14,12 @@ class SecurityController extends AbstractController
     #[Route(path: '/', name: 'app_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
+
         if ($this->getUser()) {
+
+//            $user->setRefreshToken(rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '='));
+//            $user->setRefreshTokenAt(new \DateTimeImmutable());
+
             return $this->redirectToRoute('account');
         }
 

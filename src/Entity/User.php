@@ -41,6 +41,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private $refreshTokenAt;
 
+    #[ORM\Column(type: 'boolean', nullable: true)]
+    private $isTokenValid;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -167,6 +170,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setRefreshTokenAt(?\DateTimeImmutable $refreshTokenAt): self
     {
         $this->refreshTokenAt = $refreshTokenAt;
+
+        return $this;
+    }
+
+    public function getIsTokenValid(): ?bool
+    {
+        return $this->isTokenValid;
+    }
+
+    public function setIsTokenValid(?bool $isTokenValid): self
+    {
+        $this->isTokenValid = $isTokenValid;
 
         return $this;
     }
