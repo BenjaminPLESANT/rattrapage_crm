@@ -44,6 +44,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'boolean', nullable: true)]
     private $isTokenValid;
 
+    #[ORM\Column(type: 'boolean', nullable: true)]
+    private $isTokenRevoked;
+
+
     public function getId(): ?int
     {
         return $this->id;
@@ -71,6 +75,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         if (empty($this->getAccessToken())) {
             $this->setAccessToken(rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '='));
         }
+
     }
 
     /**
@@ -185,4 +190,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+    public function getIsTokenRevoked(): ?bool
+    {
+        return $this->isTokenRevoked;
+    }
+
+    public function setIsTokenRevoked(?bool $isTokenRevoked): self
+    {
+        $this->isTokenRevoked = $isTokenRevoked;
+
+        return $this;
+    }
+
+
+
 }

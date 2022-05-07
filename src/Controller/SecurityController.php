@@ -11,16 +11,15 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class SecurityController extends AbstractController
 {
+
     #[Route(path: '/', name: 'app_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
+        $user = $this->getUser();
 
-        if ($this->getUser()) {
+        if ($user) {
 
-//            $user->setRefreshToken(rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '='));
-//            $user->setRefreshTokenAt(new \DateTimeImmutable());
-
-            return $this->redirectToRoute('account');
+            return $this->redirectToRoute('account', ['user' => $user]);
         }
 
         // get the login error if there is one
