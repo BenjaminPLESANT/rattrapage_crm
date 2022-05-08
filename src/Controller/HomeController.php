@@ -22,10 +22,16 @@ class HomeController extends AbstractController
     public function account(UserRepository $userRepository, Request $request, SerializerInterface $serializer): Response
     {
         $user = $this->getUser();
-        $entityAsArray = $serializer->normalize($user, 'array');
+        $data = $serializer->normalize($user, 'array');
 
-        dump($entityAsArray);
-        dump($user);
+        dump($data);
+
+        if($data['isTokenValid']){
+            dump('oui oui oui');
+        }else {
+            dump('non non non');
+
+        }
 
 
         return $this->render('home/index.html.twig', ['controller_name' => 'HomeController',]);
