@@ -15,8 +15,6 @@ class HomeController extends AbstractController
 {
 
 
-
-
     #[IsGranted('ROLE_USER', message: "Vous n'avez pas le droit d'être ici", statusCode: 403)]
     #[Route('/account', name: 'account')]
     public function account(UserRepository $userRepository, Request $request, SerializerInterface $serializer): Response
@@ -26,14 +24,30 @@ class HomeController extends AbstractController
 
         dump($data);
 
-        if($data['isTokenValid']){
+        if ($data['isTokenValid']) {
             dump('oui oui oui');
-        }else {
+        } else {
             dump('non non non');
 
         }
 
+        $putain = $request->getSession();
+        dump($putain);
 
         return $this->render('home/index.html.twig', ['controller_name' => 'HomeController',]);
+    }
+
+    /**
+     * Called on every request to decide if this authenticator should be
+     * used for the request. Returning `false` will cause this authenticator
+     * to be skipped.
+     */
+    public function supports(Request $request): bool
+    {
+        dump('une requête supports');
+
+        $user = $request->getContent();
+        dump($user);
+        return $request->headers->has('X-AUTH-TOKEN');
     }
 }

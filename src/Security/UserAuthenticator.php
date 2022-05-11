@@ -54,12 +54,16 @@ class UserAuthenticator extends AbstractLoginFormAuthenticator
 
 
         if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
+            dump('je suis ici');
+
             return new RedirectResponse($targetPath);
+
 
         }
 
 
         // For example:
+        dump('je suis ici');
         return new RedirectResponse($this->urlGenerator->generate('account'));
     }
 

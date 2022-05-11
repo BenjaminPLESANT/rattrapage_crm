@@ -5,24 +5,38 @@ namespace App\Security;
 
 
 use App\Entity\User;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Guard\AuthenticatorInterface;
 use Symfony\Component\Security\Guard\Token\GuardTokenInterface;
+use Symfony\Component\Security\Http\Util\TargetPathTrait;
 
 class Middleware implements AuthenticatorInterface
 {
+    use TargetPathTrait;
+
+    public const LOGIN_ROUTE = 'app_login';
+
+    private UrlGeneratorInterface $urlGenerator;
+    private UserRepository $user;
+
+
     private $em;
 
-    public function __construct(EntityManagerInterface $em)
+    public function __construct(EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, UserRepository $user)
     {
         $this->em = $em;
+        $this->urlGenerator = $urlGenerator;
+        $this->user = $user;
     }
 
     /**
@@ -32,7 +46,10 @@ class Middleware implements AuthenticatorInterface
      */
     public function supports(Request $request): bool
     {
-        dump('une requête');
+        dump('une requête supports');
+
+        $user = $request->getContent();
+        dump($user);
         return $request->headers->has('X-AUTH-TOKEN');
     }
 
@@ -42,11 +59,15 @@ class Middleware implements AuthenticatorInterface
      */
     public function getCredentials(Request $request)
     {
+        dump('une requête getCredentials');
+
         return $request->headers->get('X-AUTH-TOKEN');
     }
 
     public function getUser($credentials, UserProviderInterface $userProvider): ?UserInterface
     {
+        dump('une requête getUser');
+
         if (null === $credentials) {
             // The token header was empty, authentication fails with HTTP Status
             // Code 401 "Unauthorized"
@@ -61,6 +82,8 @@ class Middleware implements AuthenticatorInterface
 
     public function checkCredentials($credentials, UserInterface $user): bool
     {
+        dump('une requête checkCredentials');
+
         // Check credentials - e.g. make sure the password is valid.
         // In case of an API token, no credential check is needed.
 
@@ -68,14 +91,23 @@ class Middleware implements AuthenticatorInterface
         return true;
     }
 
-    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $providerKey): ?Response
+    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $providerKey,): ?Response
     {
-        // on success, let the request continue
-        return null;
+        if ($targetPath = $this->getTargetPath($request->getSession(), $providerKey)) {
+            return new RedirectResponse($targetPath);
+
+        }
+
+
+        // For example:
+        dump('je suis ici');
+        return new RedirectResponse($this->urlGenerator->generate('account'));
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
+        dump('une requête onAuthenticationFailure');
+
         $data = [
             // you may want to customize or obfuscate the message first
             'message' => strtr($exception->getMessageKey(), $exception->getMessageData())
@@ -92,6 +124,8 @@ class Middleware implements AuthenticatorInterface
      */
     public function start(Request $request, AuthenticationException $authException = null): Response
     {
+        dump('une requête start');
+
         $data = [
             // you might translate this message
             'message' => 'Authentication Required'
