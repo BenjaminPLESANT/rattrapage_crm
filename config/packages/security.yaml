@@ -21,6 +21,10 @@ security:
       lazy: true
       provider: app_user_provider
       custom_authenticator: App\Security\UserAuthenticator
+      entry_point: App\Security\UserAuthenticator
+      guard:
+          authenticators:
+             - App\Security\Middleware
 
       #        main:
       #            lazy: true
