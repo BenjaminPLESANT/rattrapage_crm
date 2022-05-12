@@ -4,16 +4,30 @@
 
 {% block body %}
 
+    <style type="text/css">
+        *, a {
+            list-style-type: none;
+            text-decoration: none;
+        }
+    </style>
 
-    <div class="example-wrapper">
-
-        {% if app.user %}
-            {% if is_granted('ROLE_USER') %}
-                <div class="mb-3">
-                    Bonjour {{ app.user.username }} ravi de te revoir, <a href="{{ path('app_logout') }}">Logout</a>
+    {% if app.user %}
+        {% if is_granted('ROLE_USER') %}
+            <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="{{ path('account') }}">Rattrapage CRM</a>
+                    <button class="btn btn-secondary my-2 my-sm-0" type="submit"><a href="{{ path('app_logout') }}">Logout</a>
+                    </button>
                 </div>
-            {% endif %}
-        {% endif %}
+            </nav>
 
-    </div>
+            <div class="container mt-4">
+                <h1>Bonjour {{ app.user.username }} ravi de te revoir</h1>
+            </div>
+
+
+
+        {% endif %}
+    {% endif %}
+
 {% endblock %}

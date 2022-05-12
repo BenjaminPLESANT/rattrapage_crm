@@ -6,10 +6,13 @@ use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
 
@@ -24,38 +27,51 @@ class HomeController extends AbstractController
         $this->user = $user;
     }
 
+
     #[IsGranted('ROLE_USER', message: "Vous n'avez pas le droit d'être ici", statusCode: 403)]
     #[Route('/account', name: 'account')]
-    public function account(Request $request, SerializerInterface $serializer): Response
+    public function account(Request $request, SerializerInterface $serializer, SessionInterface $session, RouterInterface $router): Response
     {
         $user = $this->getUser();
-        $data = $serializer->normalize($user, 'array');
 
-        dump($data);
+        $actualDate = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
+        $tokenAccessAtTimeStamp = $user->getAccessTokenAt();
+        $interval = date_diff($actualDate, $tokenAccessAtTimeStamp);
 
-        if ($data['isTokenValid']) {
-            dump('oui oui oui');
+        if ($user->getIsTokenRevoked() == true) {
+
+            $user->setIsTokenRevoked(false);
+            $user->setIsTokenValid(true);
+            $user->setAccessToken(rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '='));
+            $user->setAccessTokenAt(new \DateTime('now', new \DateTimeZone('Europe/Paris')));
+            $this->em->persist($user);
+            $this->em->flush();
+
         } else {
-            dump('non non non');
+            if ($interval->i > 30) {
 
+                $user->setIsTokenRevoked(true);
+                $user->setIsTokenValid(false);
+                $user->setRefreshToken(null);
+                $user->setRefreshTokenAt(null);
+                $this->em->persist($user);
+                $this->em->flush();
+
+                return new RedirectResponse($router->generate('app_logout'));
+
+            } elseif ($interval->i <= 30) {
+
+                $user->setAccessTokenAt(new \DateTime('now', new \DateTimeZone('Europe/Paris')));
+                $user->setRefreshToken(true);
+                $user->setRefreshTokenAt(new \DateTime('now', new \DateTimeZone('Europe/Paris')));
+                $this->em->persist($user);
+                $this->em->flush();
+            }
         }
-
 
 
         return $this->render('home/index.html.twig', ['controller_name' => 'HomeController',]);
     }
 
-    /**
-     * Called on every request to decide if this authenticator should be
-     * used for the request. Returning `false` will cause this authenticator
-     * to be skipped.
-     */
-    public function supports(Request $request): bool
-    {
-        dump('une requête supports');
 
-        $user = $request->getContent();
-        dump($user);
-        return $request->headers->has('X-AUTH-TOKEN');
-    }
 }

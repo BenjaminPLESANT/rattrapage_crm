@@ -11,11 +11,14 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
+use Symfony\Component\Security\Csrf\TokenStorage\TokenStorageInterface;
 use Symfony\Component\Security\Guard\AuthenticatorInterface;
 use Symfony\Component\Security\Guard\Token\GuardTokenInterface;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
@@ -28,15 +31,20 @@ class Middleware implements AuthenticatorInterface
 
     private UrlGeneratorInterface $urlGenerator;
     private UserRepository $user;
-
+    private Security $security;
+    private TokenStorageInterface $tokenInterface;
+    private SessionInterface $session;
 
     private $em;
 
-    public function __construct(EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, UserRepository $user)
+    public function __construct(EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, UserRepository $user, Security $security, TokenStorageInterface $tokenInterface, SessionInterface $session)
     {
         $this->em = $em;
         $this->urlGenerator = $urlGenerator;
         $this->user = $user;
+        $this->security = $security;
+        $this->tokenInterface = $tokenInterface;
+        $this->session = $session;
     }
 
     /**
@@ -44,12 +52,14 @@ class Middleware implements AuthenticatorInterface
      * used for the request. Returning `false` will cause this authenticator
      * to be skipped.
      */
-    public function supports(Request $request): bool
+    public function supports(Request $request)
     {
-        dump('une requête supports');
+//        $test = $this->tokenInterface->hasToken();
+        $id = $this->session->get('_security.last_username');
+//        $user = $this->user->findOneBy('id' => $userId)
+//        dump($test);
+        dump($id);
 
-        $user = $request->getContent();
-        dump($user);
         return $request->headers->has('X-AUTH-TOKEN');
     }
 
@@ -67,6 +77,8 @@ class Middleware implements AuthenticatorInterface
     public function getUser($credentials, UserProviderInterface $userProvider): ?UserInterface
     {
         dump('une requête getUser');
+
+        $user = $userProvider->refreshUser();
 
         if (null === $credentials) {
             // The token header was empty, authentication fails with HTTP Status
@@ -93,15 +105,7 @@ class Middleware implements AuthenticatorInterface
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $providerKey,): ?Response
     {
-        if ($targetPath = $this->getTargetPath($request->getSession(), $providerKey)) {
-            return new RedirectResponse($targetPath);
-
-        }
-
-
-        // For example:
-        dump('je suis ici');
-        return new RedirectResponse($this->urlGenerator->generate('account'));
+        return null;
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response

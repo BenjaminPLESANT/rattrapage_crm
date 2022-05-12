@@ -38,7 +38,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $refreshToken;
 
-    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[ORM\Column(type: 'datetime', nullable: true)]
     private $refreshTokenAt;
 
     #[ORM\Column(type: 'boolean', nullable: true)]
@@ -46,6 +46,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: 'boolean', nullable: true)]
     private $isTokenRevoked;
+
+    #[ORM\Column(type: 'datetime')]
+    private $accessTokenAt;
 
 
     public function getId(): ?int
@@ -75,6 +78,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         if (empty($this->getAccessToken())) {
             $this->setAccessToken(rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '='));
         }
+
+        if (empty($this->getAccessTokenAt())) {
+            $this->setAccessTokenAt(new \DateTime('now', new \DateTimeZone('Europe/Paris')));
+        }
+
 
     }
 
@@ -167,12 +175,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getRefreshTokenAt(): ?\DateTimeImmutable
+    public function getRefreshTokenAt()
     {
         return $this->refreshTokenAt;
     }
 
-    public function setRefreshTokenAt(?\DateTimeImmutable $refreshTokenAt): self
+    public function setRefreshTokenAt($refreshTokenAt)
     {
         $this->refreshTokenAt = $refreshTokenAt;
 
@@ -191,7 +199,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getIsTokenRevoked(): ?bool
+    public function getIsTokenRevoked()
     {
         return $this->isTokenRevoked;
     }
@@ -207,5 +215,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getSalt()
     {
         // TODO: Implement getSalt() method.
+    }
+
+    public function getAccessTokenAt(): ?\DateTimeInterface
+    {
+        return $this->accessTokenAt;
+    }
+
+    public function setAccessTokenAt(\DateTimeInterface $accessTokenAt): self
+    {
+        $this->accessTokenAt = $accessTokenAt;
+
+        return $this;
     }
 }
