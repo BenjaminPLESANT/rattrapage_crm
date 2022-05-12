@@ -54,11 +54,6 @@ class Middleware implements AuthenticatorInterface
      */
     public function supports(Request $request)
     {
-//        $test = $this->tokenInterface->hasToken();
-        $id = $this->session->get('_security.last_username');
-//        $user = $this->user->findOneBy('id' => $userId)
-//        dump($test);
-        dump($id);
 
         return $request->headers->has('X-AUTH-TOKEN');
     }
